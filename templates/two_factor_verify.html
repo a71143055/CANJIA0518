@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}2차 인증 - CANJIA{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">2차 인증</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> 
+                    인증 앱에서 생성된 6자리 코드를 입력해주세요.
+                </div>
+                
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="code" class="form-label">인증 코드</label>
+                        <input type="text" class="form-control" id="code" name="code" 
+                               placeholder="123456" required maxlength="6" pattern="[0-9]{6}" autofocus>
+                        <div class="form-text">인증 앱(Google Authenticator 등)에서 6자리 코드를 확인하세요.</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-shield-check"></i> 인증하기
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,9 +1,12 @@
 from flask import Flask, render_template, redirect, url_for, request, session, flash
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from authlib.integrations.flask_client import OAuth
 from models import db, User, Field, Document, FieldMembership
 from config import Config
-import requests
+import pyotp
+import qrcode
+import io
+import base64
+import json
 from datetime import datetime
 
 app = Flask(__name__)
@@ -21,16 +24,6 @@ db.init_app(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 login_manager.login_message = '로그인이 필요합니다.'
-
-# OAuth setup
-oauth = OAuth(app)
-microsoft = oauth.register(
-    'microsoft',
-    client_id=Config.MICROSOFT_CLIENT_ID,
-    client_secret=Config.MICROSOFT_CLIENT_SECRET,
-    server_metadata_url=f'https://login.microsoftonline.com/{Config.MICROSOFT_TENANT_ID}/v2.0/.well-known/openid-configuration',
-    client_kwargs={'scope': 'openid profile email'}
-)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -53,35 +46,152 @@ def index():
     """Main landing page"""
     return render_template('index.html', fields=Config.FIELDS, goals=Config.GOALS)
 
-@app.route('/login')
-def login():
-    """Login page with Microsoft OAuth"""
-    redirect_uri = url_for('auth_callback', _external=True)
-    return microsoft.authorize_redirect(redirect_uri)
-
-@app.route('/auth/callback')
-def auth_callback():
-    """Microsoft OAuth callback"""
-    token = microsoft.authorize_access_token()
-    resp = microsoft.get('https://graph.microsoft.com/v1.0/me')
-    user_info = resp.json()
-    
-    # Check if user exists
-    user = User.query.filter_by(microsoft_id=user_info['id']).first()
-    
-    if not user:
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    """User registration"""
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        name = request.form['name']
+        
+        # Check if user already exists
+        if User.query.filter_by(username=username).first():
+            flash('이미 존재하는 사용자 이름입니다.')
+            return redirect(url_for('register'))
+        
+        if User.query.filter_by(email=email).first():
+            flash('이미 존재하는 이메일입니다.')
+            return redirect(url_for('register'))
+        
         # Create new user
         user = User(
-            microsoft_id=user_info['id'],
-            email=user_info['mail'] or user_info['userPrincipalName'],
-            name=user_info['displayName'],
-            profile_image=user_info.get('photo', '')
+            username=username,
+            email=email,
+            name=name
         )
+        user.set_password(password)
         db.session.add(user)
         db.session.commit()
+        
+        flash('회원가입이 완료되었습니다. 로그인해주세요.')
+        return redirect(url_for('login'))
     
-    login_user(user)
-    return redirect(url_for('dashboard'))
+    return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """User login"""
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        user = User.query.filter_by(username=username).first()
+        
+        if user and user.check_password(password):
+            if user.two_factor_enabled:
+                # Store user ID in session for 2FA verification
+                session['pending_user_id'] = user.id
+                return redirect(url_for('two_factor_verify'))
+            else:
+                login_user(user)
+                return redirect(url_for('dashboard'))
+        else:
+            flash('사용자 이름 또는 비밀번호가 올바르지 않습니다.')
+    
+    return render_template('login.html')
+
+@app.route('/two-factor/verify', methods=['GET', 'POST'])
+def two_factor_verify():
+    """Verify 2FA code"""
+    if 'pending_user_id' not in session:
+        return redirect(url_for('login'))
+    
+    user = User.query.get(session['pending_user_id'])
+    if not user:
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        code = request.form['code']
+        
+        # Verify TOTP code
+        totp = pyotp.TOTP(user.two_factor_secret)
+        if totp.verify(code):
+            login_user(user)
+            session.pop('pending_user_id')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('인증 코드가 올바르지 않습니다.')
+    
+    return render_template('two_factor_verify.html')
+
+@app.route('/two-factor/setup', methods=['GET', 'POST'])
+@login_required
+def two_factor_setup():
+    """Setup 2FA for user"""
+    if request.method == 'POST':
+        # Generate secret
+        secret = pyotp.random_base32()
+        current_user.two_factor_secret = secret
+        
+        # Generate backup codes
+        backup_codes = [pyotp.random_base32()[:8] for _ in range(10)]
+        current_user.two_factor_backup_codes = json.dumps(backup_codes)
+        
+        db.session.commit()
+        
+        # Generate QR code
+        totp = pyotp.TOTP(secret)
+        qr_uri = totp.provisioning_uri(
+            name=current_user.email,
+            issuer_name='CANJIA'
+        )
+        
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        qr.add_data(qr_uri)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Convert to base64
+        img_io = io.BytesIO()
+        img.save(img_io, 'PNG')
+        img_io.seek(0)
+        img_base64 = base64.b64encode(img_io.getvalue()).decode()
+        
+        return render_template('two_factor_setup.html', 
+                             qr_code=img_base64, 
+                             secret=secret,
+                             backup_codes=backup_codes,
+                             show_confirmation=True)
+    
+    return render_template('two_factor_setup.html', show_confirmation=False)
+
+@app.route('/two-factor/confirm', methods=['POST'])
+@login_required
+def two_factor_confirm():
+    """Confirm 2FA setup"""
+    code = request.form['code']
+    
+    totp = pyotp.TOTP(current_user.two_factor_secret)
+    if totp.verify(code):
+        current_user.two_factor_enabled = True
+        db.session.commit()
+        flash('2차 인증이 활성화되었습니다.')
+        return redirect(url_for('profile'))
+    else:
+        flash('인증 코드가 올바르지 않습니다. 다시 시도해주세요.')
+        return redirect(url_for('two_factor_setup'))
+
+@app.route('/two-factor/disable', methods=['POST'])
+@login_required
+def two_factor_disable():
+    """Disable 2FA"""
+    current_user.two_factor_enabled = False
+    current_user.two_factor_secret = None
+    current_user.two_factor_backup_codes = None
+    db.session.commit()
+    flash('2차 인증이 비활성화되었습니다.')
+    return redirect(url_for('profile'))
 
 @app.route('/logout')
 @login_required

@@ -6,19 +6,6 @@ load_dotenv()
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     
-    # Microsoft OAuth Configuration
-    MICROSOFT_CLIENT_ID = os.environ.get('MICROSOFT_CLIENT_ID')
-    MICROSOFT_CLIENT_SECRET = os.environ.get('MICROSOFT_CLIENT_SECRET')
-    MICROSOFT_TENANT_ID = os.environ.get('MICROSOFT_TENANT_ID', 'common')
-    
-    # Microsoft OAuth Endpoints
-    MICROSOFT_AUTH_URL = f'https://login.microsoftonline.com/{MICROSOFT_TENANT_ID}/oauth2/v2.0/authorize'
-    MICROSOFT_TOKEN_URL = f'https://login.microsoftonline.com/{MICROSOFT_TENANT_ID}/oauth2/v2.0/token'
-    MICROSOFT_GRAPH_API = 'https://graph.microsoft.com/v1.0/me'
-    
-    # Redirect URI
-    REDIRECT_URI = 'http://localhost:5000/auth/callback'
-    
     # Database Configuration
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///canjia.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False

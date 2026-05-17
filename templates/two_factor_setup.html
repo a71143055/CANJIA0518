@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}2차 인증 설정 - CANJIA{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">2차 인증 설정</h4>
+            </div>
+            <div class="card-body">
+                {% if not show_confirmation %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> 
+                    2차 인증을 설정하면 로그인할 때마다 인증 앱에서 코드를 입력해야 합니다.
+                </div>
+                
+                <form method="POST">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-shield-plus"></i> 2차 인증 설정 시작
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>1. QR 코드 스캔</h5>
+                        <p class="text-muted">인증 앱(Google Authenticator, Authy 등)을 설치하고 QR 코드를 스캔하세요.</p>
+                        
+                        <div class="text-center mb-3">
+                            <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code" class="img-fluid" style="max-width: 200px;">
+                        </div>
+                        
+                        <div class="alert alert-secondary">
+                            <strong>시크릿 키:</strong> <code>{{ secret }}</code>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5>2. 백업 코드 저장</h5>
+                        <p class="text-muted">인증 앱을 사용할 수 없을 때를 위해 백업 코드를 안전한 곳에 저장하세요.</p>
+                        
+                        <div class="alert alert-warning">
+                            <strong>⚠️ 중요:</strong> 백업 코드는 한 번만 사용할 수 있으며, 다시 볼 수 없습니다.
+                        </div>
+                        
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <ul class="list-unstyled mb-0">
+                                    {% for code in backup_codes %}
+                                    <li><code>{{ code }}</code></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h5>3. 인증 확인</h5>
+                <p class="text-muted">설정을 완료하려면 인증 앱에서 생성된 코드를 입력하세요.</p>
+                
+                <form method="POST" action="{{ url_for('two_factor_confirm') }}">
+                    <div class="mb-3">
+                        <label for="code" class="form-label">인증 코드</label>
+                        <input type="text" class="form-control" id="code" name="code" 
+                               placeholder="123456" required maxlength="6" pattern="[0-9]{6}" autofocus>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> 설정 완료
+                        </button>
+                        <a href="{{ url_for('profile') }}" class="btn btn-secondary">
+                            취소
+                        </a>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
