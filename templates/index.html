@@ -9,8 +9,11 @@
         
         {% if not current_user.is_authenticated %}
         <div class="mt-4">
-            <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
-                <i class="bi bi-microsoft"></i> Microsoft로 로그인
+            <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg me-2">
+                <i class="bi bi-box-arrow-in-right"></i> 로그인
+            </a>
+            <a href="{{ url_for('register') }}" class="btn btn-outline-light btn-lg">
+                <i class="bi bi-person-plus"></i> 회원가입
             </a>
         </div>
         {% else %}

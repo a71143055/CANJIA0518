@@ -88,6 +88,31 @@
                 {% endif %}
             </div>
         </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">2차 인증</h5>
+            </div>
+            <div class="card-body">
+                {% if user.two_factor_enabled %}
+                <div class="alert alert-success">
+                    <i class="bi bi-shield-check"></i> 2차 인증이 활성화되어 있습니다.
+                </div>
+                <form action="{{ url_for('two_factor_disable') }}" method="POST" onsubmit="return confirm('정말 2차 인증을 비활성화하시겠습니까?');">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-shield-x"></i> 2차 인증 비활성화
+                    </button>
+                </form>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-shield-exclamation"></i> 2차 인증이 비활성화되어 있습니다.
+                </div>
+                <a href="{{ url_for('two_factor_setup') }}" class="btn btn-primary">
+                    <i class="bi bi-shield-plus"></i> 2차 인증 설정
+                </a>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
