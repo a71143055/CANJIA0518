@@ -15,7 +15,10 @@ CANJIA는 제주도에서의 산업 발전과 네트워크 구축을 목표로 �
 ## 주요 기능
 
 ### 1. 인증 시스템
-- Microsoft OAuth 2.0을 통한 로그인
+- 일반 회원가입 및 로그인 (사용자 이름/이메일/비밀번호)
+- 2차 인증 (2FA) 지원 - TOTP 기반 (Google Authenticator 등 호환)
+- QR 코드를 통한 쉬운 2차 인증 설정
+- 백업 코드 제공
 - 사용자 프로필 관리
 - 세션 관리
 
@@ -68,20 +71,10 @@ pip install -r requirements.txt
 
 ```env
 SECRET_KEY=your-secret-key-here
-MICROSOFT_CLIENT_ID=your-microsoft-client-id
-MICROSOFT_CLIENT_SECRET=your-microsoft-client-secret
-MICROSOFT_TENANT_ID=common
 DATABASE_URL=sqlite:///canjia.db
 ```
 
-### 4. Microsoft OAuth 설정
-
-1. [Microsoft Azure Portal](https://portal.azure.com/)에 접속
-2. Azure Active Directory > 앱 등록
-3. 새 앱 등록
-4. 리디렉션 URI에 `http://localhost:5000/auth/callback` 추가
-5. 클라이언트 ID 및 클라이언트 시크릿 복사
-6. `.env` 파일에 붙여넣기
+`SECRET_KEY`는 안전한 랜덤 문자열로 설정해주세요.
 
 ### 5. 애플리케이션 실행
 
@@ -104,6 +97,10 @@ CANJIA0518/
 ├── templates/            # HTML 템플릿
 │   ├── base.html         # 기본 템플릿
 │   ├── index.html        # 메인 페이지
+│   ├── register.html     # 회원가입
+│   ├── login.html        # 로그인
+│   ├── two_factor_verify.html  # 2차 인증 확인
+│   ├── two_factor_setup.html   # 2차 인증 설정
 │   ├── dashboard.html    # 대시보드
 │   ├── profile.html      # 프로필 페이지
 │   ├── edit_profile.html # 프로필 수정
@@ -122,15 +119,17 @@ CANJIA0518/
 
 - **백엔드**: Flask (Python)
 - **데이터베이스**: SQLite (SQLAlchemy)
-- **인증**: Microsoft OAuth 2.0 (Authlib)
+- **인증**: 일반 로그인/회원가입 + 2차 인증 (PyOTP)
 - **프론트엔드**: HTML5, Bootstrap 5, JavaScript
 - **세션 관리**: Flask-Login
+- **2차 인증**: TOTP (Time-based One-Time Password)
 
 ## 데이터베이스 모델
 
 ### User
-- 사용자 정보
-- Microsoft 계정 연동
+- 사용자 정보 (사용자 이름, 이메일, 비밀번호, 실명)
+- 비밀번호 해싱 (Werkzeug)
+- 2차 인증 설정 (시크릿 키, 백업 코드)
 - 프로필 관리
 
 ### Field
@@ -150,7 +149,7 @@ CANJIA0518/
 
 - **개발환경**: Google Colab - Gemini
 - **웹 페이지 구현환경**: Flask
-- **로그인 환경**: Microsoft Client - ID & Secret
+- **로그인 환경**: 일반 로그인/회원가입 + 2차 인증
 
 ## 라이선스
 
