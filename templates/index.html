@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section text-center py-5 mb-5">
+    <div class="container">
+        <h1 class="display-4 fw-bold">CANJIA</h1>
+        <p class="lead">Community for Association & Network in Jeju Industry Association</p>
+        <p class="text-muted">제주 산업 발전 및 네트워크 공동체</p>
+        
+        {% if not current_user.is_authenticated %}
+        <div class="mt-4">
+            <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
+                <i class="bi bi-microsoft"></i> Microsoft로 로그인
+            </a>
+        </div>
+        {% else %}
+        <div class="mt-4">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg">
+                대시보드로 이동
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mb-5">
+    <div class="col-12">
+        <h2 class="text-center mb-4">발전 영역 분야</h2>
+    </div>
+</div>
+
+<div class="row mb-5">
+    {% for field in fields %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-star-fill text-primary"></i> {{ field.name }}
+                </h5>
+                <p class="card-text">{{ field.description }}</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row mb-5">
+    <div class="col-12">
+        <h2 class="text-center mb-4">우리의 목표</h2>
+    </div>
+</div>
+
+<div class="row mb-5">
+    {% for goal in goals %}
+    <div class="col-md-3 mb-3">
+        <div class="card bg-light">
+            <div class="card-body text-center">
+                <h5 class="card-title">{{ goal }}</h5>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h3 class="card-title">CANJIA 소개</h3>
+                <p class="card-text">
+                    CANJIA는 제주도에서의 산업 발전과 네트워크 구축을 목표로 하는 공동체입니다.
+                    인공지능(AGI), 안드로이드 사이보그 트랜스포머(ACTF) 개발부터 스포츠 활동, 카페 창업까지
+                    다양한 분야에서 회원들이 협력하고 성장할 수 있는 플랫폼을 제공합니다.
+                </p>
+                <p class="card-text">
+                    우리는 경제 자립, 기술 증진, 회원 모집, 주거 이전, 생명 연장, 그리고 궁극적으로 우주 유영을
+                    목표로 함께 나아가고 있습니다.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

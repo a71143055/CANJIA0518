@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}프로필 - CANJIA{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">프로필</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                {% if user.profile_image %}
+                <img src="{{ user.profile_image }}" alt="Profile" class="rounded-circle mb-3" style="max-width: 150px;">
+                {% else %}
+                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 150px; height: 150px; margin: 0 auto;">
+                    <i class="bi bi-person-fill text-white" style="font-size: 4rem;"></i>
+                </div>
+                {% endif %}
+                <h4>{{ user.name }}</h4>
+                <p class="text-muted">{{ user.email }}</p>
+                <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">
+                    <i class="bi bi-pencil"></i> 프로필 수정
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">정보</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>이름:</strong> {{ user.name }}</p>
+                <p><strong>이메일:</strong> {{ user.email }}</p>
+                <p><strong>가입일:</strong> {{ user.created_at.strftime('%Y년 %m월 %d일') }}</p>
+                <p><strong>상태:</strong> 
+                    {% if user.is_active %}
+                    <span class="badge bg-success">활성</span>
+                    {% else %}
+                    <span class="badge bg-danger">비활성</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">소개</h5>
+            </div>
+            <div class="card-body">
+                {% if user.bio %}
+                <p>{{ user.bio }}</p>
+                {% else %}
+                <p class="text-muted">소개글이 없습니다.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">가입한 분야</h5>
+            </div>
+            <div class="card-body">
+                {% if user.field_memberships %}
+                <div class="row">
+                    {% for membership in user.field_memberships %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ membership.field.name }}</h6>
+                                <p class="card-text small text-muted">
+                                    가입일: {{ membership.joined_at.strftime('%Y-%m-%d') }}
+                                </p>
+                                <a href="{{ url_for('field_detail', field_id=membership.field.field_id) }}" class="btn btn-sm btn-primary">
+                                    분야 보기
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">아직 가입한 분야가 없습니다.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}{{ document.title }} - CANJIA{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">대시보드</a></li>
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('field_detail', field_id=document.field.field_id) }}">{{ document.field.name }}</a>
+                </li>
+                <li class="breadcrumb-item active">{{ document.title }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">{{ document.title }}</h3>
+                {% if document.user_id == current_user.id %}
+                <div class="btn-group">
+                    <a href="{{ url_for('edit_document', document_id=document.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-pencil"></i> 수정
+                    </a>
+                    <form action="{{ url_for('delete_document', document_id=document.id) }}" method="POST" class="d-inline" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i> 삭제
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <span class="badge bg-info">{{ document.field.name }}</span>
+                    {% if document.is_public %}
+                    <span class="badge bg-success">공개</span>
+                    {% else %}
+                    <span class="badge bg-secondary">비공개</span>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <small class="text-muted">
+                        작성자: {{ document.author.name }} | 
+                        작성일: {{ document.created_at.strftime('%Y년 %m월 %d일 %H:%M') }} | 
+                        수정일: {{ document.updated_at.strftime('%Y년 %m월 %d일 %H:%M') }}
+                    </small>
+                </div>
+                
+                <hr>
+                
+                <div class="document-content">
+                    {{ document.content|nl2br }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}{{ field_config.name }} - CANJIA{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">대시보드</a></li>
+                <li class="breadcrumb-item active">{{ field_config.name }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title">{{ field_config.name }}</h2>
+                <p class="card-text">{{ field_config.description }}</p>
+                
+                <div class="mt-3">
+                    {% if is_member %}
+                    <form action="{{ url_for('leave_field', field_id=field_config.id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-box-arrow-right"></i> 분야 탈퇴
+                        </button>
+                    </form>
+                    <a href="{{ url_for('new_document', field_id=field_config.id) }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> 새 문서 작성
+                    </a>
+                    {% else %}
+                    <form action="{{ url_for('join_field', field_id=field_config.id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-box-arrow-in-right"></i> 분야 가입
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <h3 class="mb-4">문서</h3>
+        
+        {% if documents %}
+        <div class="list-group">
+            {% for document in documents %}
+            <a href="{{ url_for('document_detail', document_id=document.id) }}" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">{{ document.title }}</h5>
+                    <small class="text-muted">{{ document.updated_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                </div>
+                <p class="mb-1">{{ document.content[:200] }}...</p>
+                <small class="text-muted">
+                    작성자: {{ document.author.name }} | 
+                    {% if document.is_public %}
+                    <span class="badge bg-success">공개</span>
+                    {% else %}
+                    <span class="badge bg-secondary">비공개</span>
+                    {% endif %}
+                </small>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> 아직 등록된 문서가 없습니다.
+            {% if is_member %}
+            첫 번째 문서를 작성해보세요!
+            {% else %}
+            분야에 가입한 후 문서를 작성할 수 있습니다.
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}{% if document %}문서 수정{% else %}새 문서{% endif %} - {{ field.name }} - CANJIA{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">대시보드</a></li>
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('field_detail', field_id=field.field_id) }}">{{ field.name }}</a>
+                </li>
+                <li class="breadcrumb-item active">
+                    {% if document %}문서 수정{% else %}새 문서{% endif %}
+                </li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    {% if document %}문서 수정{% else %}새 문서 작성{% endif %}
+                    <small class="text-muted">- {{ field.name }}</small>
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">제목</label>
+                        <input type="text" class="form-control" id="title" name="title" 
+                               value="{{ document.title if document else '' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="content" class="form-label">내용</label>
+                        <textarea class="form-control" id="content" name="content" rows="15" 
+                                  placeholder="문서 내용을 입력하세요... 구글 문서처럼 자유롭게 작성할 수 있습니다." required>{{ document.content if document else '' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="is_public" name="is_public" 
+                                   {% if document and document.is_public %}checked{% elif not document %}checked{% endif %}>
+                            <label class="form-check-label" for="is_public">
+                                공개 문서 (다른 회원들이 볼 수 있음)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> 저장
+                        </button>
+                        <a href="{% if document %}{{ url_for('document_detail', document_id=document.id) }}{% else %}{{ url_for('field_detail', field_id=field.field_id) }}{% endif %}" class="btn btn-secondary">
+                            취소
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #content {
+        font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+        line-height: 1.6;
+    }
+</style>
+{% endblock %}
